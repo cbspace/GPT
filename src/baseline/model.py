@@ -11,7 +11,7 @@ class TransformerBlock(nn.Module):
         super().__init__()
 
         self.layer_norm1 = nn.LayerNorm(embed_dim)
-        self.self_attention = nn.MultiheadAttention(embed_dim, n_heads, dropout=dropout)
+        self.self_attention = nn.MultiheadAttention(embed_dim, n_heads, dropout=dropout, batch_first=True)
         
         self.layer_norm2 = nn.LayerNorm(embed_dim)
         self.ffn = nn.Sequential(nn.Linear(embed_dim, ffn_dim),
@@ -39,6 +39,7 @@ class GPTModel(nn.Module):
         x = self.transformer(x)
         x = self.output(x)
         return x
+
 
 n_layers = 6
 n_heads = 4
