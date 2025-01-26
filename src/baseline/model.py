@@ -28,15 +28,29 @@ class TransformerBlock(nn.Module):
 
 
 class GPTModel(nn.Module):
-    def __init__(self, n_layers, n_heads, embed_dim, ffn_dim, n_vocab, dropout):
+    def __init__(self, n_layers, n_heads, embed_dim, ffn_dim, n_vocab, max_seq_len, dropout):
         super().__init__()
 
-        self.transformer = nn.Sequential(*[TransformerBlock(n_heads, embed_dim, ffn_dim, dropout) for _ in range(n_layers)])
-        self.output = nn.Sequential(nn.LayerNorm(embed_dim),
-                                    nn.Linear(embed_dim, n_vocab))
+        self.embedding = nn.Embedding(n_vocab, embed_dim)
+        self.positional_embedding = nn.Embedding(max_seq_len, embed_dim)
 
-    def forward(self, x):
-        x = self.transformer(x)
-        x = self.output(x)
+        self.transformer = nn.Sequential(*[TransformerBlock(n_heads, embed_dim, ffn_dim, dropout) for _ in range(n_layers)])
+
+        self.layer_norm = nn.LayerNorm(embed_dim)
+        self.output_projection = nn.Linear(embed_dim, n_vocab, bias=False)
+        self.output_projection.weight = self.embedding.weight
+
+    def forward(self, input_tokens):
+        input_embed = self.embedding(input_tokens)
+        positions = torch.arange(0, input_tokens.size(1)).unsqueeze(0)
+        input_embed = input_embed + self.positional_embedding(x)
+
+        x = self.transformer(input_embed)
+        x = self.layer_norm(x)
+        x = self.output_projection(x)
         return x
 
+    def get_model_size(self):
+        # print([p.numel() for p in self.parameters()])
+        total = sum(p.numel() for p in self.parameters())
+        return f'Model Size: {total/1e6:.1f}M'
