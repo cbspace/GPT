@@ -28,7 +28,7 @@ class TransformerBlock(nn.Module):
 
 
 class GPTModel(nn.Module):
-    def __init__(self, n_layers, n_heads, embed_dim, ffn_dim, dropout):
+    def __init__(self, n_layers, n_heads, embed_dim, ffn_dim, n_vocab, dropout):
         super().__init__()
 
         self.transformer = nn.Sequential(*[TransformerBlock(n_heads, embed_dim, ffn_dim, dropout) for _ in range(n_layers)])
@@ -39,13 +39,4 @@ class GPTModel(nn.Module):
         x = self.transformer(x)
         x = self.output(x)
         return x
-
-
-n_layers = 6
-n_heads = 4
-embed_dim = 32
-ffn_dim = embed_dim*4
-n_vocab = 100
-
-model = GPTModel(n_layers, n_heads, embed_dim, ffn_dim, dropout=0.2)
 
