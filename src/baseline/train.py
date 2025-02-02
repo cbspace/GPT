@@ -15,9 +15,9 @@ n_epochs = 1
 for epoch in range(n_epochs):
     pass
 
-# Do a forward pass on the model
+# Do some forward passes on the model
 model.eval()
-t = tokenize("The cat sat on the mat")
-t = torch.tensor(t, dtype=torch.long, device=device).unsqueeze(0)
-completion = model.generate(t, 32)
-print(completion)
+prompts = tokenize(["The cat sat on the mat", "The dog ran away"])
+completions = [model.generate(p, 32) for p in prompts]
+for sequence in completions:
+    print(sequence)

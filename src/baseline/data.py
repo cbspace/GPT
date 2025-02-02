@@ -12,11 +12,11 @@ tokenizer = tiktoken.encoding_for_model('gpt2')
 
 def tokenize(text_in):
     #tokenized = tokenizer(text_in, truncation=True, padding='max_length', max_length=max_seq_len, return_tensors='pt')
-    tokenized = tokenizer.encode(text_in)
+    tokenized = [tokenizer.encode(sequence) for sequence in text_in]
     return tokenized
 
 def decode(tokens_in):
-    tokenized = tokenizer.decode_single_token_bytes(tokens_in)
+    tokenized = tokenizer.decode(tokens_in)
     return tokenized
 
 # Process a single training example using sliding window
@@ -30,4 +30,5 @@ def process_input(text_in, max):
 
 # View a sample of the dataset
 # print(train_dataset[0])
+
 

@@ -57,11 +57,13 @@ class GPTModel(nn.Module):
     # Generate a completion from the model
     def generate(self, input_ctx, max_length):
         assert max_length <= max_seq_len
-        out_tokens = []
-        logits = self(input_ctx)
-        max_logit = logits[0,-1,:].argmax().detach().tolist()
-        decoded = decode(max_logit)
-        return decoded
+        context_list = [i for i in input_ctx]
+        while len(context_list) < max_length:
+            context = torch.tensor(context_list, dtype=torch.long, device=device).unsqueeze(0)
+            logits = self(context)
+            max_logit = logits[:,-1,:].argmax()
+            context_list.append(max_logit)
+        return decode(context_list)
 
     def get_model_size(self):
         # print([p.numel() for p in self.parameters()])
