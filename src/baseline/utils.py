@@ -12,6 +12,10 @@ n_heads = 12
 embed_dim = 768
 ffn_dim = embed_dim*4
 
-# Torch
+# PyTorch device
 import torch
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+elif torch.backends.mps.is_available() and torch.backends.mps.is_built():
+    device = torch.device('mps')
+else: device = torch.device('cpu')
