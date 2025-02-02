@@ -66,6 +66,5 @@ class GPTModel(nn.Module):
         return decode(context_list)
 
     def get_model_size(self):
-        # print([p.numel() for p in self.parameters()])
         total = sum(p.numel() for p in self.parameters())
         return f'Model Size: {total/1e6:.1f}M'
