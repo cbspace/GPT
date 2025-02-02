@@ -1,24 +1,33 @@
 from utils import *
 
 from datasets import load_dataset
-from transformers import GPT2Tokenizer
+import tiktoken
 
 # Start with a small simple dataset of sentences (1.7M rows)
-train_dataset = load_dataset('agentlans/high-quality-english-sentences', 'default', split='train')
-test_dataset = load_dataset('agentlans/high-quality-english-sentences', 'default', split='test')
+# train_dataset = load_dataset('agentlans/high-quality-english-sentences', 'default', split='train')
+# test_dataset = load_dataset('agentlans/high-quality-english-sentences', 'default', split='test')
 
 # Tokenizer
-tokenizer = GPT2Tokenizer.from_pretrained('gpt2', clean_up_tokenization_spaces=True)
-tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+tokenizer = tiktoken.encoding_for_model('gpt2')
 
-# Process a single training example
-def process_input(text_in):
-    tokenized = tokenizer(text_in, truncation=True, padding='max_length', max_length=max_seq_len, return_tensors='pt')
+def tokenize(text_in):
+    #tokenized = tokenizer(text_in, truncation=True, padding='max_length', max_length=max_seq_len, return_tensors='pt')
+    tokenized = tokenizer.encode(text_in)
     return tokenized
 
-# View a sample of the dataset
-print(train_dataset[0])
+def decode(tokens_in):
+    tokenized = tokenizer.decode_single_token_bytes(tokens_in)
+    return tokenized
 
-# Tokenize
-print(process_input(train_dataset[0]['text']))
+# Process a single training example using sliding window
+def process_input(text_in, max):
+    inputs, labels = [], []
+    tokenized = tokenizer.encode(text_in)
+    for i in range(len(tokenized)-1):
+        inputs.append(tokenized[i:])
+        labels.append(tokenized[i-1:])
+    return [inputs, labels]
+
+# View a sample of the dataset
+# print(train_dataset[0])
 

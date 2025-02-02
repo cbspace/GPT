@@ -3,6 +3,9 @@
 # elements of the model with my own implementations. I will also compare 
 # performance between my model and this baseline throughout.
 
+from utils import *
+from data import decode
+
 import torch 
 from torch import nn
 
@@ -38,17 +41,27 @@ class GPTModel(nn.Module):
 
         self.layer_norm = nn.LayerNorm(embed_dim)
         self.output_projection = nn.Linear(embed_dim, n_vocab, bias=False)
-        self.output_projection.weight = self.embedding.weight
+        # Weight sharing not enabled yet
+        # self.output_projection.weight = self.embedding.weight
 
     def forward(self, input_tokens):
         input_embed = self.embedding(input_tokens)
-        positions = torch.arange(0, input_tokens.size(1)).unsqueeze(0)
-        input_embed = input_embed + self.positional_embedding(x)
+        positions = torch.arange(0, input_tokens.size(1), device=input_tokens.device).unsqueeze(0)
+        input_embed = input_embed + self.positional_embedding(positions)
 
         x = self.transformer(input_embed)
         x = self.layer_norm(x)
         x = self.output_projection(x)
         return x
+
+    # Generate a completion from the model
+    def generate(self, input_ctx, max_length):
+        assert max_length <= max_seq_len
+        out_tokens = []
+        logits = self(input_ctx)
+        max_logit = logits[0,-1,:].argmax().detach().tolist()
+        decoded = decode(max_logit)
+        return decoded
 
     def get_model_size(self):
         # print([p.numel() for p in self.parameters()])
