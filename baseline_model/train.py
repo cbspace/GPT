@@ -1,7 +1,6 @@
 from utils import *
 from model import TransformerBlock, GPTModel
-# from data import train_dataset, validation_dataset, test_dataset, format_data
-from data import tokenize, decode
+from data import tokenize, decode, train_loader, validation_loader
 
 import torch 
 from torch import nn
@@ -13,11 +12,15 @@ model.to(device)
 n_epochs = 1
 
 for epoch in range(n_epochs):
+    for sequences in train_loader:
+        sequences = sequences.to(device)
+        input_tokens = sequences[:, 1:]
+        labels = sequences[:, :-1]
     pass
 
 # Do some forward passes on the model
 model.eval()
 prompts = tokenize(["The cat sat on the mat", "The dog ran away"])
-completions = [model.generate(p, 32) for p in prompts]
+completions = [model.generate(p, 24) for p in prompts]
 for sequence in completions:
     print(sequence)

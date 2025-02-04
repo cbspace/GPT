@@ -1,34 +1,27 @@
 from utils import *
 
-from datasets import load_dataset
-import tiktoken
+import numpy as np
+from torch.utils.data import Dataset, DataLoader
 
-# Start with a small simple dataset of sentences (1.7M rows)
-# train_dataset = load_dataset('agentlans/high-quality-english-sentences', 'default', split='train')
-# test_dataset = load_dataset('agentlans/high-quality-english-sentences', 'default', split='test')
+class GPTDataset(Dataset):
+    def __init__(self, data_tokens, seq_len):
+        super().__init__()
+        in_length = len(data_tokens)
+        trim = in_length % (seq_len + 1)
+        self.sequences = torch.tensor(data_tokens, dtype=torch.long)[:-trim].view(-1, seq_len + 1)
 
-# Tokenizer
-tokenizer = tiktoken.encoding_for_model('gpt2')
+    def __len__(self):
+        return self.sequences.size(0)
 
-def tokenize(text_in):
-    #tokenized = tokenizer(text_in, truncation=True, padding='max_length', max_length=max_seq_len, return_tensors='pt')
-    tokenized = [tokenizer.encode(sequence) for sequence in text_in]
-    return tokenized
-
-def decode(tokens_in):
-    tokenized = tokenizer.decode(tokens_in)
-    return tokenized
-
-# Process a single training example using sliding window
-def process_input(text_in, max):
-    inputs, labels = [], []
-    tokenized = tokenizer.encode(text_in)
-    for i in range(len(tokenized)-1):
-        inputs.append(tokenized[i:])
-        labels.append(tokenized[i-1:])
-    return [inputs, labels]
-
-# View a sample of the dataset
-# print(train_dataset[0])
+    def __getitem__(self, idx):
+        assert(idx < len(self))
+        return self.sequences[idx]
 
 
+train_data_tokens = np.load('../data/train_dataset.npy', mmap_mode='r')
+train_dataset = GPTDataset(train_data_tokens, max_seq_len)
+train_loader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size, num_workers=num_workers)
+
+validation_data_tokens = np.load('../data/validation_dataset.npy', mmap_mode='r')
+validation_dataset = GPTDataset(validation_data_tokens, max_seq_len)
+validation_loader = DataLoader(validation_dataset, shuffle=True, batch_size=batch_size, num_workers=num_workers)

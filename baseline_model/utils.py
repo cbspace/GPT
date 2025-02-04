@@ -1,8 +1,8 @@
-# Store definitions in this file
+import tiktoken
 
 # Data
 max_seq_len = 1024
-batch_size = 512
+batch_size = 16 # 512
 n_vocab = 50257
 num_workers = 8
 
@@ -19,3 +19,14 @@ if torch.cuda.is_available():
 elif torch.backends.mps.is_available() and torch.backends.mps.is_built():
     device = torch.device('mps')
 else: device = torch.device('cpu')
+
+# Tokenization
+tokenizer = tiktoken.encoding_for_model('gpt2')
+
+def tokenize(text_in):
+    tokenized = [tokenizer.encode(sequence) for sequence in text_in]
+    return tokenized
+
+def decode(tokens_in):
+    tokenized = tokenizer.decode(tokens_in)
+    return tokenized
