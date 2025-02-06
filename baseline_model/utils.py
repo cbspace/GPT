@@ -1,8 +1,8 @@
 import tiktoken
 
 # Data
-max_seq_len = 1024
-batch_size = 16 # 512
+max_seq_len = 64
+batch_size = 192 #512
 n_vocab = 50257
 num_workers = 8
 
@@ -11,6 +11,10 @@ n_layers = 12
 n_heads = 12
 embed_dim = 768
 ffn_dim = embed_dim*4
+temperature = 10.0
+
+# Config
+save_path = './checkpoints'
 
 # PyTorch device
 import torch

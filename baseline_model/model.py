@@ -61,7 +61,9 @@ class GPTModel(nn.Module):
         while len(context_list) < max_length:
             context = torch.tensor(context_list, dtype=torch.long, device=device).unsqueeze(0)
             logits = self(context)
-            max_logit = logits[:,-1,:].argmax()
+            max_logit = logits[:,-1,:].argmax(dim=1)
+            #probs = nn.functional.softmax(logits[:,-1,:] / temperature, dim=1)
+            #probs_sampled = torch.multinomial(probs, 1)
             context_list.append(max_logit)
         return decode(context_list)
 
