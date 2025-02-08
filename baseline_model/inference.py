@@ -11,7 +11,9 @@ model.to(device)
 # Do some forward passes on the model
 prompts = tokenize(["The cat sat on the mat", 
                     "The dog ran away",
-                    "I'm a language model"])
+                    "I'm a language model",
+                    "The capital of Australia is",
+                    "A"])
 
 completions = [model.generate(p, 24) for p in prompts]
 for sequence in completions:
