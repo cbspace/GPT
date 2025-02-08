@@ -4,10 +4,9 @@ from model import TransformerBlock, GPTModel
 from data import tokenize
 
 checkpoint_loaded = torch.load(f'{save_path}/model.pkl')
-model = GPTModel(n_layers, n_heads, embed_dim, ffn_dim, n_vocab, max_seq_len, dropout=0.4)
+model = GPTModel(n_layers, n_heads, embed_dim, ffn_dim, n_vocab, max_seq_len, dropout=dropout_value)
 model.state_dict = checkpoint_loaded['state_dict']
 model.to(device)
-model.eval()
 
 # Do some forward passes on the model
 prompts = tokenize(["The cat sat on the mat", 
