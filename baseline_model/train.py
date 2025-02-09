@@ -10,41 +10,36 @@ import sys
 model = GPTModel(n_layers, n_heads, embed_dim, ffn_dim, n_vocab, max_seq_len, dropout=dropout_value)
 model = model.to(device)
 
-optimiser = optim.AdamW(model.parameters(), lr=learn_rate)
+optimiser = optim.AdamW(model.parameters(), lr=learn_rate, betas=(0.9, 0.999), eps=1e-8)
 loss_function = nn.CrossEntropyLoss()
 
 for epoch in range(n_epochs):
     model.train()
-    for i,sequences in enumerate(tqdm(train_loader)):
-        train_loss = 0
+    for i,sequences in enumerate(train_loader):
         sequences = sequences.to(device)
-        for mb_index in range(n_minibatch):
-            idx_start, idx_end = mb_index * minibatch_size, (mb_index + 1) * minibatch_size - 1
-            input_tokens = sequences[idx_start:idx_end, 1:]
-            labels = sequences[idx_start:idx_end, :-1]
-            logits = model(input_tokens)
-            train_loss += loss_function(logits[:,-1,:], labels[:,-1])
+        input_tokens = sequences[:, :-1]
+        labels = sequences[:, -1]
+
+        logits = model(input_tokens)
+        loss = loss_function(logits[:,-1,:], labels)
 
         optimiser.zero_grad()
-        train_loss = train_loss / n_minibatch
-        train_loss.backward()
+        loss.backward()
         optimiser.step()
 
-        if (i+1) % n_print == 0:
-            print(f'Epoch: {epoch+1} Train Loss: {train_loss.item():.3f}')
+        print(f'Epoch: {epoch+1} Minibatch: {i}/{len(train_loader)} Train Loss: {loss.item():.3f}')
 
     model.eval()
     with torch.no_grad():
         validation_loss = 0
         for sequences in tqdm(validation_loader):
             sequences = sequences.to(device)
-            for mb_index in range(n_minibatch):
-                idx_start, idx_end = mb_index * minibatch_size, (mb_index + 1) * minibatch_size - 1
-                input_tokens = sequences[idx_start:idx_end, 1:]
-                labels = sequences[idx_start:idx_end, :-1]
-                logits = model(input_tokens)
-                validation_loss += loss_function(logits[:,-1,:], labels[:,-1])
-        validation_loss = validation_loss / (len(validation_loader) * n_minibatch)
+            input_tokens = sequences[:, :-1]
+            labels = sequences[:, -1]
+            logits = model(input_tokens)
+            validation_loss += loss_function(logits[:,-1,:], labels).detach()
+        
+        validation_loss = validation_loss / (len(validation_loader))
         print(f'Epoch: {epoch+1} Validation Loss: {validation_loss.item():.3f}')
 
 model_checkpoint = {'state_dict': model.state_dict()}

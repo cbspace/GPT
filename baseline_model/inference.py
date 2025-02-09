@@ -9,7 +9,7 @@ model.state_dict = checkpoint_loaded['state_dict']
 model.to(device)
 
 # Do some forward passes on the model
-prompts = tokenize(["The cat sat on the mat", 
+prompts = tokenize(["My name is", 
                     "The dog ran away",
                     "I'm a language model",
                     "The capital of Australia is",

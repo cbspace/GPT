@@ -64,9 +64,12 @@ class GPTModel(nn.Module):
             while len(context_list) < max_length:
                 context = torch.tensor(context_list, dtype=torch.long, device=device).unsqueeze(0)
                 logits = self(context)
-                probs = nn.functional.softmax(logits[:,-1,:], dim=1)
-                probs_sampled = torch.multinomial(probs, 1)
-                context_list.append(probs_sampled)
+                topk_probs, topk_indices = logits[0,-1,:].topk(topk_elements)
+                probs = nn.functional.softmax(topk_probs / temperature, dim=-1)
+
+                probs_sampled = torch.multinomial(probs, 1).item()
+                sampled_item = topk_indices[probs_sampled].item()
+                context_list.append(sampled_item)
         return decode(context_list)
 
     def get_model_size(self):
