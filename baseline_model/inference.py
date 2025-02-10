@@ -15,6 +15,6 @@ prompts = tokenize(["My name is",
                     "The capital of Australia is",
                     "A"])
 
-completions = [model.generate(p, 24) for p in prompts]
+completions = [model.generate(p, 24, greedy=True) for p in prompts]
 for sequence in completions:
     print(sequence)

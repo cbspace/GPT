@@ -10,6 +10,9 @@ import sys
 model = GPTModel(n_layers, n_heads, embed_dim, ffn_dim, n_vocab, max_seq_len, dropout=dropout_value)
 model = model.to(device)
 
+model = torch.compile(model)
+torch.backends.cuda.matmul.allow_tf32 = True
+
 optimiser = optim.AdamW(model.parameters(), lr=learn_rate, betas=(0.9, 0.999), eps=1e-8)
 loss_function = nn.CrossEntropyLoss()
 
@@ -18,10 +21,10 @@ for epoch in range(n_epochs):
     for i,sequences in enumerate(train_loader):
         sequences = sequences.to(device)
         input_tokens = sequences[:, :-1]
-        labels = sequences[:, -1]
+        labels = sequences[:, 1:]
 
         logits = model(input_tokens)
-        loss = loss_function(logits[:,-1,:], labels)
+        loss = loss_function(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
 
         optimiser.zero_grad()
         loss.backward()
@@ -35,9 +38,9 @@ for epoch in range(n_epochs):
         for sequences in tqdm(validation_loader):
             sequences = sequences.to(device)
             input_tokens = sequences[:, :-1]
-            labels = sequences[:, -1]
+            labels = sequences[:, 1:]
             logits = model(input_tokens)
-            validation_loss += loss_function(logits[:,-1,:], labels).detach()
+            validation_loss += loss_function(logits.reshape(-1, logits.size(-1)), labels.reshape(-1)).detach()
         
         validation_loss = validation_loss / (len(validation_loader))
         print(f'Epoch: {epoch+1} Validation Loss: {validation_loss.item():.3f}')

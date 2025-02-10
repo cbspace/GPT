@@ -24,8 +24,9 @@ class TransformerBlock(nn.Module):
                                  nn.Dropout(p=dropout))
 
     def forward(self, x):
+        causal_mask = torch.tril(torch.ones(x.shape[1], x.shape[1])).to(device)
         x_in = self.layer_norm1(x)
-        x = x + self.self_attention(x_in, x_in, x_in)[0]
+        x = x + self.self_attention(x_in, x_in, x_in, attn_mask=causal_mask)[0]
         x = x + self.ffn(self.layer_norm2(x))
         return x
 
@@ -55,7 +56,7 @@ class GPTModel(nn.Module):
         return x
 
     # Generate a completion from the model
-    def generate(self, input_ctx, max_length):
+    def generate(self, input_ctx, max_length, greedy=True):
         assert max_length <= max_seq_len
 
         self.eval()
@@ -63,13 +64,17 @@ class GPTModel(nn.Module):
         with torch.no_grad():
             while len(context_list) < max_length:
                 context = torch.tensor(context_list, dtype=torch.long, device=device).unsqueeze(0)
-                logits = self(context)
-                topk_probs, topk_indices = logits[0,-1,:].topk(topk_elements)
-                probs = nn.functional.softmax(topk_probs / temperature, dim=-1)
+                logits = self(context)[0,-1,:]
+                
+                if greedy:
+                    selected_token = logits.argmax(dim=-1).item()
+                else:
+                    topk_probs, topk_indices = logits.topk(topk_elements)
+                    probs = nn.functional.softmax(topk_probs / temperature, dim=-1)
+                    probs_sampled = torch.multinomial(probs, 1).item()
+                    selected_token = topk_indices[probs_sampled].item()
 
-                probs_sampled = torch.multinomial(probs, 1).item()
-                sampled_item = topk_indices[probs_sampled].item()
-                context_list.append(sampled_item)
+                context_list.append(selected_token)
         return decode(context_list)
 
     def get_model_size(self):
