@@ -24,7 +24,7 @@ def create_token_file(dataset, ds_name):
     for text in dataset:
         for t in tokenizer.encode(text['text']):
             all_tokens.append(t)
-        all_tokens.append(sep_token)
+        # all_tokens.append(sep_token)
     numpy_array = np.array(all_tokens, dtype=np.uint16)
     np.save(ds_name, numpy_array)
     print(f'Saved {len(all_tokens)/1e6:.3f}M tokens to {ds_name}.npy')

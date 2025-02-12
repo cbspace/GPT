@@ -1,7 +1,7 @@
 import tiktoken
 
 # Data
-max_seq_len = 64
+max_seq_len = 640
 # batch_size = 512
 n_vocab = 50257
 num_workers = 12
@@ -9,19 +9,20 @@ num_workers = 12
 # Model
 n_layers = 8
 n_heads = 12
-embed_dim = 480
+embed_dim = 504
 ffn_dim = embed_dim*4
 
 # Training
 learn_rate = 6e-5
 dropout_value = 0.4
-minibatch_size = 256
+minibatch_size = 16
 # n_minibatch = batch_size // minibatch_size
-n_epochs = 1
+n_epochs = 3
 n_print = 100
+train_temp = 1.4
 
 # Inference
-topk_elements = 100
+topk_elements = 40
 temperature = 1.4
 
 # Config

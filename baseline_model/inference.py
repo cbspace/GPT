@@ -15,11 +15,11 @@ model.to(device)
 
 # Do some forward passes on the model
 prompts = tokenize(["My name is", 
-                    "It's important to note that",
-                    "I'm a language model",
-                    "It's always a good idea to",
+                    "It's important to note that although the sky is blue it can sometimes be",
+                    "I'm a language model and I am going to fully leverage this input context to tell you that",
+                    "It's always a good idea to using longer context inputs when running LLM inference as",
                     "A"])
 
-completions = [model.generate(p, 24, greedy=False) for p in prompts]
+completions = [model.generate(p, 64, greedy=False) for p in prompts]
 for sequence in completions:
     print(sequence)
