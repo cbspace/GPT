@@ -13,7 +13,7 @@ embed_dim = 504
 ffn_dim = embed_dim*4
 
 # Training
-learn_rate = 6e-5
+learn_rate = 1e-4
 dropout_value = 0.4
 minibatch_size = 16
 # n_minibatch = batch_size // minibatch_size

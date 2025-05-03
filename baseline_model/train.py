@@ -21,12 +21,12 @@ for epoch in range(n_epochs):
     model.train()
     for i,sequences in enumerate(train_loader):
         sequences = sequences.to(device)
-        input_tokens = sequences[:, :-1]
-        labels = sequences[:, 1:]
+        input_tokens = sequences[:, :-1] # B, T
+        labels = sequences[:, 1:] # B, T
 
-        logits = model(input_tokens) / train_temp
+        logits = model(input_tokens) / train_temp # B, T, V
         loss = loss_function(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
-
+        
         optimiser.zero_grad()
         loss.backward()
         optimiser.step()

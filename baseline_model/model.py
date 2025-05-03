@@ -4,7 +4,6 @@
 # performance between my model and this baseline throughout.
 
 from utils import *
-from data import decode
 
 import torch 
 from torch import nn
@@ -24,7 +23,7 @@ class TransformerBlock(nn.Module):
                                  nn.Dropout(p=dropout))
 
     def forward(self, x):
-        causal_mask = torch.tril(torch.ones(x.shape[1], x.shape[1])).to(device)
+        causal_mask = nn.Transformer.generate_square_subsequent_mask(x.shape[1]).to(device)
         x_in = self.layer_norm1(x)
         x = x + self.self_attention(x_in, x_in, x_in, attn_mask=causal_mask)[0]
         x = x + self.ffn(self.layer_norm2(x))
@@ -42,8 +41,7 @@ class GPTModel(nn.Module):
 
         self.layer_norm = nn.LayerNorm(embed_dim)
         self.output_projection = nn.Linear(embed_dim, n_vocab, bias=False)
-        # Weight sharing not enabled yet
-        # self.output_projection.weight = self.embedding.weight
+        self.output_projection.weight = self.embedding.weight # Using weight sharing
 
     def forward(self, input_tokens):
         input_embed = self.embedding(input_tokens)
