@@ -7,7 +7,7 @@ class GPTDataset(Dataset):
     def __init__(self, data_tokens, seq_len):
         super().__init__()
         in_length = len(data_tokens)
-        trim = in_length % (seq_len + 1)
+        trim = in_length % ((seq_len + 1) * batch_size)
         self.sequences = torch.tensor(data_tokens, dtype=torch.long)[:-trim].view(-1, seq_len + 1)
 
     def __len__(self):

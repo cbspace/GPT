@@ -7,38 +7,40 @@ from utils import *
 
 import torch 
 from torch import nn
+#from huggingface_hub import PyTorchModelHubMixin
 
 class TransformerBlock(nn.Module):
-    def __init__(self, n_heads, embed_dim, ffn_dim, dropout):
+    def __init__(self, device, n_heads, embed_dim, ffn_dim, dropout):
         super().__init__()
-
+        self.device = device
         self.layer_norm1 = nn.LayerNorm(embed_dim)
         self.self_attention = nn.MultiheadAttention(embed_dim, n_heads, dropout=dropout, batch_first=True)
         
         self.layer_norm2 = nn.LayerNorm(embed_dim)
         self.ffn = nn.Sequential(nn.Linear(embed_dim, ffn_dim),
-                                 nn.GELU(),
+                                 nn.SELU(),
                                  nn.Dropout(p=dropout),
                                  nn.Linear(ffn_dim, embed_dim),
                                  nn.Dropout(p=dropout))
 
     def forward(self, x):
-        causal_mask = nn.Transformer.generate_square_subsequent_mask(x.shape[1]).to(device)
+        causal_mask = nn.Transformer.generate_square_subsequent_mask(x.shape[1]).to(self.device)
         x_in = self.layer_norm1(x)
         x = x + self.self_attention(x_in, x_in, x_in, attn_mask=causal_mask)[0]
         x = x + self.ffn(self.layer_norm2(x))
         return x
 
 
-class GPTModel(nn.Module):
-    def __init__(self, n_layers, n_heads, embed_dim, ffn_dim, n_vocab, max_seq_len, dropout):
+class GPTModel(nn.Module):#, PyTorchModelHubMixin):
+    def __init__(self, device, n_layers, n_heads, embed_dim, ffn_dim, n_vocab, max_seq_len, dropout):
         super().__init__()
-
+        self.device = device
+        self.max_seq_len = max_seq_len
         self.embedding = nn.Embedding(n_vocab, embed_dim)
         nn.init.normal_(self.embedding.weight, mean=0.0, std=0.02)
         self.positional_embedding = nn.Embedding(max_seq_len, embed_dim)
 
-        self.transformer = nn.Sequential(*[TransformerBlock(n_heads, embed_dim, ffn_dim, dropout) for _ in range(n_layers)])
+        self.transformer = nn.Sequential(*[TransformerBlock(device, n_heads, embed_dim, ffn_dim, dropout) for _ in range(n_layers)])
 
         self.layer_norm = nn.LayerNorm(embed_dim)
         self.output_projection = nn.Linear(embed_dim, n_vocab, bias=False)
@@ -56,13 +58,13 @@ class GPTModel(nn.Module):
 
     # Generate a completion from the model
     def generate(self, input_ctx, max_length, greedy=True):
-        assert max_length <= max_seq_len
+        assert max_length <= self.max_seq_len
 
         self.eval()
         context_list = [i for i in input_ctx]
         with torch.no_grad():
             while len(context_list) < max_length:
-                context = torch.tensor(context_list, dtype=torch.long, device=device).unsqueeze(0)
+                context = torch.tensor(context_list, dtype=torch.long, device=self.device).unsqueeze(0)
                 logits = self(context)[0,-1,:]
                 
                 if greedy:
@@ -74,7 +76,7 @@ class GPTModel(nn.Module):
                     selected_token = topk_indices[probs_sampled].item()
 
                 context_list.append(selected_token)
-        return decode(context_list)
+        return context_list
 
     def get_model_size(self):
         total = sum(p.numel() for p in self.parameters())
