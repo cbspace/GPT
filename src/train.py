@@ -15,7 +15,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 
 optimiser = optim.AdamW(model.parameters(), lr=learn_rate, betas=(0.9, 0.999), eps=1e-8)
 scheduler = optim.lr_scheduler.StepLR(optimiser, step_size=2000, gamma=0.7)
-loss_function = nn.CrossEntropyLoss(label_smoothing=0.1)
+loss_function = nn.CrossEntropyLoss()
 
 for epoch in range(n_epochs):
     model.train()
@@ -48,7 +48,7 @@ for epoch in range(n_epochs):
             logits = model(input_tokens)
             validation_loss += loss_function(logits.reshape(-1, logits.size(-1)), labels.reshape(-1)).detach()
         
-        validation_loss = validation_loss / (len(validation_loader)) * n_minibatch
+        validation_loss = validation_loss / len(validation_loader)
         print(f'Epoch: {epoch+1} Validation Loss: {validation_loss.item():.3f}')
 
     model_checkpoint = {'state_dict': model.state_dict()}
