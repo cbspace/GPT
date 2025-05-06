@@ -7,7 +7,7 @@ from utils import *
 
 import torch 
 from torch import nn
-#from huggingface_hub import PyTorchModelHubMixin
+from huggingface_hub import PyTorchModelHubMixin
 
 class TransformerBlock(nn.Module):
     def __init__(self, device, n_heads, embed_dim, ffn_dim, dropout):
@@ -31,7 +31,7 @@ class TransformerBlock(nn.Module):
         return x
 
 
-class GPTModel(nn.Module):#, PyTorchModelHubMixin):
+class GPTModel(nn.Module, PyTorchModelHubMixin):
     def __init__(self, device, n_layers, n_heads, embed_dim, ffn_dim, n_vocab, max_seq_len, dropout):
         super().__init__()
         self.device = device
