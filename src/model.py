@@ -18,7 +18,7 @@ class TransformerBlock(nn.Module):
         
         self.layer_norm2 = nn.LayerNorm(embed_dim)
         self.ffn = nn.Sequential(nn.Linear(embed_dim, ffn_dim),
-                                 nn.SELU(),
+                                 nn.SiLU(),
                                  nn.Dropout(p=dropout),
                                  nn.Linear(ffn_dim, embed_dim),
                                  nn.Dropout(p=dropout))
