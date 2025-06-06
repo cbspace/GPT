@@ -20,6 +20,6 @@ prompts = tokenize(["My name is",
                     "It's always a good idea to",
                     "A"])
 
-completions = [model.generate(p, 42, greedy=False) for p in prompts]
+completions = [model.generate(p, 42, temperature=temperature, top_p=top_p_value) for p in prompts]
 for sequence in completions:
     print(decode(sequence))

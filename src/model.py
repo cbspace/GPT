@@ -57,7 +57,7 @@ class GPTModel(nn.Module, PyTorchModelHubMixin):
         return x
 
     # Generate a completion from the model
-    def generate(self, input_ctx, max_length, greedy=True):
+    def generate(self, input_ctx, max_length, temperature=1.0, top_p=None, top_k=None):
         assert max_length <= self.max_seq_len
 
         self.eval()
@@ -66,14 +66,25 @@ class GPTModel(nn.Module, PyTorchModelHubMixin):
             while len(context_list) < max_length:
                 context = torch.tensor(context_list, dtype=torch.long, device=self.device).unsqueeze(0)
                 logits = self(context)[0,-1,:]
-                
-                if greedy:
-                    selected_token = logits.argmax(dim=-1).item()
-                else:
+
+                if top_p:
+                    probs = torch.nn.functional.softmax(logits, dim=-1)
+                    sorted_probs, sorted_indices = torch.sort(probs, dim=-1)
+                    cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
+                    sorted_mask = cumulative_probs <= top_p
+                    sorted_mask[..., 1:] = sorted_mask[..., :-1].clone()
+                    sorted_mask[..., 0] = True
+                    filtered_probs = sorted_probs * sorted_mask
+                    filtered_probs = filtered_probs / filtered_probs.sum()
+                    probs_sampled = torch.multinomial(filtered_probs, 1).item()
+                    selected_token = sorted_indices[probs_sampled].item()
+                elif top_k:
                     topk_probs, topk_indices = logits.topk(topk_elements)
                     probs = nn.functional.softmax(topk_probs / temperature, dim=-1)
                     probs_sampled = torch.multinomial(probs, 1).item()
                     selected_token = topk_indices[probs_sampled].item()
+                else: # Greedy decoding
+                    selected_token = logits.argmax(dim=-1).item()
 
                 context_list.append(selected_token)
         return context_list

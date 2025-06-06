@@ -21,8 +21,9 @@ n_epochs = 10
 n_print = 500
 
 # Inference
+top_p_value = 0.9
 topk_elements = 40
-temperature = 0.9
+temperature = 0.7
 
 # Config
 save_path = './checkpoints'
