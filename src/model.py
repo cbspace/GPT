@@ -68,8 +68,8 @@ class GPTModel(nn.Module, PyTorchModelHubMixin):
                 logits = self(context)[0,-1,:]
 
                 if top_p:
-                    probs = torch.nn.functional.softmax(logits, dim=-1)
-                    sorted_probs, sorted_indices = torch.sort(probs, dim=-1)
+                    probs = torch.nn.functional.softmax(logits / temperature, dim=-1)
+                    sorted_probs, sorted_indices = torch.sort(probs, dim=-1, descending=True)
                     cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
                     sorted_mask = cumulative_probs <= top_p
                     sorted_mask[..., 1:] = sorted_mask[..., :-1].clone()
@@ -79,8 +79,9 @@ class GPTModel(nn.Module, PyTorchModelHubMixin):
                     probs_sampled = torch.multinomial(filtered_probs, 1).item()
                     selected_token = sorted_indices[probs_sampled].item()
                 elif top_k:
-                    topk_probs, topk_indices = logits.topk(topk_elements)
-                    probs = nn.functional.softmax(topk_probs / temperature, dim=-1)
+                    scaled_logits = logits / temperature
+                    topk_probs, topk_indices = scaled_logits.topk(topk_elements)
+                    probs = nn.functional.softmax(topk_probs, dim=-1)
                     probs_sampled = torch.multinomial(probs, 1).item()
                     selected_token = topk_indices[probs_sampled].item()
                 else: # Greedy decoding
