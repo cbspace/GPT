@@ -13,9 +13,9 @@ model = model.to(device)
 model = torch.compile(model)
 torch.backends.cuda.matmul.allow_tf32 = True
 
-optimiser = optim.AdamW(model.parameters(), lr=learn_rate, betas=(0.9, 0.999), eps=1e-8)
-# step_size = 6*len(train_loader)
-# scheduler = optim.lr_scheduler.StepLR(optimiser, step_size=step_size, gamma=0.1)
+optimiser = optim.AdamW(model.parameters(), lr=learn_rate, betas=(0.9, 0.97), eps=1e-8, weight_decay=0.05)
+step_size = len(train_loader)
+scheduler = optim.lr_scheduler.StepLR(optimiser, step_size=step_size, gamma=0.85)
 loss_function = nn.CrossEntropyLoss()
 
 for epoch in range(n_epochs):
@@ -33,7 +33,7 @@ for epoch in range(n_epochs):
         if i > 0 and not i % (n_minibatch-1):
             optimiser.step()
             optimiser.zero_grad()
-            # scheduler.step()
+            scheduler.step()
 
         if not i % n_print:
             print(f'Epoch: {epoch+1} Minibatch: {i}/{len(train_loader)} Train Loss: {train_loss.item():.3f}')
