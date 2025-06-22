@@ -15,7 +15,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 
 optimiser = optim.AdamW(model.parameters(), lr=learn_rate, betas=(0.9, 0.97), eps=1e-8, weight_decay=0.05)
 step_size = len(train_loader)
-scheduler = optim.lr_scheduler.StepLR(optimiser, step_size=step_size, gamma=0.85)
+scheduler = optim.lr_scheduler.StepLR(optimiser, step_size=step_size, gamma=0.80)
 loss_function = nn.CrossEntropyLoss()
 
 for epoch in range(n_epochs):

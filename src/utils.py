@@ -1,7 +1,7 @@
 import tiktoken
 
 # Data
-max_seq_len = 680
+max_seq_len = 702
 batch_size = 128
 n_vocab = 50257
 num_workers = 12
@@ -21,9 +21,9 @@ n_epochs = 50
 n_print = 500
 
 # Inference
-top_p_value = 0.9
+top_p_value = 0.85
 topk_elements = 40
-temperature = 1.0
+temperature = 0.95
 
 # Config
 save_path = './checkpoints'
