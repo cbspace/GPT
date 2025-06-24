@@ -7,6 +7,8 @@ from utils import *
 
 import torch 
 from torch import nn
+import bitsandbytes as bnb
+from torch.utils.checkpoint import checkpoint
 from huggingface_hub import PyTorchModelHubMixin
 
 class TransformerBlock(nn.Module):
@@ -36,11 +38,11 @@ class GPTModel(nn.Module, PyTorchModelHubMixin):
         super().__init__()
         self.device = device
         self.max_seq_len = max_seq_len
-        self.embedding = nn.Embedding(n_vocab, embed_dim)
+        self.embedding = bnb.nn.StableEmbedding(n_vocab, embed_dim)
         nn.init.normal_(self.embedding.weight, mean=0.0, std=0.02)
         self.positional_embedding = nn.Embedding(max_seq_len, embed_dim)
 
-        self.transformer = nn.Sequential(*[TransformerBlock(device, n_heads, embed_dim, ffn_dim, dropout) for _ in range(n_layers)])
+        self.transformer_blocks = nn.ModuleList([TransformerBlock(device, n_heads, embed_dim, ffn_dim, dropout) for _ in range(n_layers)])
 
         self.layer_norm = nn.LayerNorm(embed_dim)
         self.output_projection = nn.Linear(embed_dim, n_vocab, bias=False)
@@ -50,8 +52,11 @@ class GPTModel(nn.Module, PyTorchModelHubMixin):
         input_embed = self.embedding(input_tokens)
         positions = torch.arange(0, input_tokens.size(1), device=input_tokens.device).unsqueeze(0)
         input_embed = input_embed + self.positional_embedding(positions)
+        x = input_embed
 
-        x = self.transformer(input_embed)
+        for block in self.transformer_blocks:
+            x = checkpoint(block, x, use_reentrant=False)
+
         x = self.layer_norm(x)
         x = self.output_projection(x)
         return x

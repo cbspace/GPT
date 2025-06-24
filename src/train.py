@@ -2,6 +2,9 @@ from utils import *
 from model import TransformerBlock, GPTModel
 from data import tokenize, decode, train_loader, validation_loader
 
+import bitsandbytes as bnb
+from torch.cuda.amp import autocast
+
 import torch 
 from torch import nn, optim
 from tqdm import tqdm
@@ -12,9 +15,10 @@ model = model.to(device)
 
 model = torch.compile(model)
 torch.backends.cuda.matmul.allow_tf32 = True
+torch.set_float32_matmul_precision('high')
 
-optimiser = optim.AdamW(model.parameters(), lr=learn_rate, betas=(0.9, 0.97), eps=1e-8, weight_decay=0.05)
-step_size = len(train_loader)
+optimiser = bnb.optim.Adam8bit(model.parameters(), lr=learn_rate, betas=(0.9, 0.97), eps=1e-8, weight_decay=0.05)
+step_size = 1e6
 scheduler = optim.lr_scheduler.StepLR(optimiser, step_size=step_size, gamma=0.80)
 loss_function = nn.CrossEntropyLoss()
 
@@ -26,8 +30,9 @@ for epoch in range(n_epochs):
         input_tokens = sequences[:, :-1] # B, T
         labels = sequences[:, 1:] # B, T
 
-        logits = model(input_tokens) # B, T, V
-        train_loss = loss_function(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
+        with autocast(dtype=torch.bfloat16):
+            logits = model(input_tokens) # B, T, V
+            train_loss = loss_function(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
         (train_loss / n_minibatch).backward()
 
         if i > 0 and not i % (n_minibatch-1):
@@ -39,7 +44,7 @@ for epoch in range(n_epochs):
             print(f'Epoch: {epoch+1} Minibatch: {i}/{len(train_loader)} Train Loss: {train_loss.item():.3f}')
 
     model.eval()
-    with torch.no_grad():
+    with torch.no_grad(), autocast(dtype=torch.bfloat16):
         validation_loss = 0
         for i, sequences in enumerate(tqdm(validation_loader)):
             sequences = sequences.to(device)

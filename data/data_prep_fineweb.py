@@ -5,9 +5,9 @@ import tiktoken
 tokenizer = tiktoken.encoding_for_model('gpt2')
 sep_token = 50256
 
-# 43M rows total - Using 4.3M train, 0.4M validation
-train_dataset = load_dataset('skymizer/fineweb-edu-dedup-45B', 'default', split='train[:1000000]')
-valid_dataset = load_dataset('skymizer/fineweb-edu-dedup-45B', 'default', split='train[1000000:1050000]')
+# 43M rows total - Using 1.4M train, 80k validation
+train_dataset = load_dataset('skymizer/fineweb-edu-dedup-45B', 'default', split='train[:1400000]')
+valid_dataset = load_dataset('skymizer/fineweb-edu-dedup-45B', 'default', split='train[1400000:1480000]')
 
 # Let's see some stats from out dataset
 print(f"Training Dataset Length:   {len(train_dataset)/1e6:.3f} M, Max Len: {len(max(train_dataset, key=len)['text'])}")
@@ -29,5 +29,5 @@ def create_token_file(dataset, ds_name):
     np.save(ds_name, numpy_array)
     print(f'Saved {len(all_tokens)/1e6:.3f}M tokens to {ds_name}.npy')
 
-create_token_file(train_dataset, 'train_dataset_fine_1M')
-create_token_file(valid_dataset, 'validation_dataset_fine_1M')
+create_token_file(train_dataset, 'train_dataset_fine_1-4M')
+create_token_file(valid_dataset, 'validation_dataset_fine_1-4M')

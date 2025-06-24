@@ -17,10 +17,10 @@ class GPTDataset(Dataset):
         return self.sequences[idx]
 
 
-train_data_tokens = np.load('../data/train_dataset_fine_1M.npy', mmap_mode='r')
+train_data_tokens = np.load('../data/train_dataset_fine_1-4M.npy', mmap_mode='r')
 train_dataset = GPTDataset(train_data_tokens, max_seq_len)
 train_loader = DataLoader(train_dataset, shuffle=True, batch_size=minibatch_size, num_workers=num_workers, persistent_workers=True, drop_last=True)
 
-validation_data_tokens = np.load('../data/validation_dataset_fine_1M.npy', mmap_mode='r')
+validation_data_tokens = np.load('../data/validation_dataset_fine_1-4M.npy', mmap_mode='r')
 validation_dataset = GPTDataset(validation_data_tokens, max_seq_len)
 validation_loader = DataLoader(validation_dataset, shuffle=True, batch_size=minibatch_size, num_workers=num_workers, persistent_workers=True, drop_last=True)
