@@ -18,7 +18,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.set_float32_matmul_precision('high')
 
 optimiser = bnb.optim.Adam8bit(model.parameters(), lr=learn_rate, betas=(0.9, 0.97), eps=1e-8, weight_decay=0.05)
-step_size = 1e6
+step_size = int(len(train_loader) * 0.75)
 scheduler = optim.lr_scheduler.StepLR(optimiser, step_size=step_size, gamma=0.80)
 loss_function = nn.CrossEntropyLoss()
 

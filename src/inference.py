@@ -20,6 +20,27 @@ prompts = tokenize(["My name is",
                     "It's always a good idea to",
                     "A"])
 
-completions = [model.generate(p, 42, temperature=temperature, top_p=top_p_value) for p in prompts]
-for sequence in completions:
-    print(decode(sequence))
+# completions = [model.generate(p, 42, temperature=temperature, top_p=top_p_value) for p in prompts]
+# for sequence in completions:
+#     print(decode(sequence))
+
+# Yield test
+update_interval = 10
+def generate(prompt,out_tokens,temperature,top_k_value):
+    model.to(device)
+    outputs = tokenizer.encode(prompt)
+    tokens_remaining = int(out_tokens)
+    out_text = prompt
+    yield out_text
+
+    while tokens_remaining:
+        new_inputs_len = update_interval if tokens_remaining >= update_interval else tokens_remaining % update_interval
+        outputs = model.generate(outputs, len(outputs)+new_inputs_len, temperature, top_k=top_k_value)
+        tokens_remaining -= new_inputs_len
+        out_text += tokenizer.decode(outputs[-new_inputs_len:])
+        yield out_text
+
+fn_outputs = list(generate(input("Prompt: "), out_tokens=200, temperature=temperature, top_k_value=topk_elements))
+for i, output in enumerate(fn_outputs):
+    if i==len(fn_outputs)-1:
+        print(output)

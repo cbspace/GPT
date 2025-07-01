@@ -85,7 +85,7 @@ class GPTModel(nn.Module, PyTorchModelHubMixin):
                     selected_token = sorted_indices[probs_sampled].item()
                 elif top_k:
                     scaled_logits = logits / temperature
-                    topk_probs, topk_indices = scaled_logits.topk(topk_elements)
+                    topk_probs, topk_indices = scaled_logits.topk(top_k)
                     probs = nn.functional.softmax(topk_probs, dim=-1)
                     probs_sampled = torch.multinomial(probs, 1).item()
                     selected_token = topk_indices[probs_sampled].item()
