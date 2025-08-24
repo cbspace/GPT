@@ -5,9 +5,9 @@ import tiktoken
 tokenizer = tiktoken.encoding_for_model('gpt2')
 sep_token = 50256
 
-# 43M rows total - Using 1.4M train, 80k validation
-train_dataset = load_dataset('skymizer/fineweb-edu-dedup-45B', 'default', split='train[:1400000]')
-valid_dataset = load_dataset('skymizer/fineweb-edu-dedup-45B', 'default', split='train[1400000:1480000]')
+# 43M rows total - Using 8M train, 80k validation
+train_dataset = load_dataset('skymizer/fineweb-edu-dedup-45B', 'default', split='train[:8000000]')
+valid_dataset = load_dataset('skymizer/fineweb-edu-dedup-45B', 'default', split='train[8000000:8080000]')
 
 # Let's see some stats from out dataset
 print(f"Training Dataset Length:   {len(train_dataset)/1e6:.3f} M, Max Len: {len(max(train_dataset, key=len)['text'])}")
@@ -20,14 +20,22 @@ for s in range(1):
 
 # Tokenize and store in files
 def create_token_file(dataset, ds_name):
-    all_tokens = []
-    for text in dataset:
-        for t in tokenizer.encode(text['text']):
-            all_tokens.append(t)
-        # all_tokens.append(sep_token)
-    numpy_array = np.array(all_tokens, dtype=np.uint16)
-    np.save(ds_name, numpy_array)
-    print(f'Saved {len(all_tokens)/1e6:.3f}M tokens to {ds_name}.npy')
+    file = open(f'{ds_name}.tokens', 'ab')
 
-create_token_file(train_dataset, 'train_dataset_fine_1-4M')
-create_token_file(valid_dataset, 'validation_dataset_fine_1-4M')
+    total_tokens = 0
+    buffer = []
+    for i,text in enumerate(dataset):
+        for t in tokenizer.encode(text['text']):
+            buffer.append(t)
+            if i and not (i+1) % 80_000:
+                numpy_array = np.array(buffer, dtype=np.uint16)
+                numpy_array.tofile(file)
+                total_tokens += len(numpy_array)
+                buffer = []
+        # all_tokens.append(sep_token)
+
+    file.close()
+    print(f'Saved {total_tokens/1e6:.3f}M tokens to {ds_name}.tokens')
+
+# create_token_file(train_dataset, 'train_dataset_fine_8M')
+create_token_file(valid_dataset, 'validation_dataset_fine_8M')

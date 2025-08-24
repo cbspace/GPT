@@ -35,13 +35,17 @@ for epoch in range(n_epochs):
             train_loss = loss_function(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
         (train_loss / n_minibatch).backward()
 
-        if i > 0 and not i % (n_minibatch-1):
+        if (i+1) % n_minibatch == 0:
             optimiser.step()
             optimiser.zero_grad()
             scheduler.step()
 
-        if not i % n_print:
-            print(f'Epoch: {epoch+1} Minibatch: {i}/{len(train_loader)} Train Loss: {train_loss.item():.3f}')
+        if (i+1) % n_print == 0:
+            print(f'Epoch: {epoch+1} Minibatch: {i+1}/{len(train_loader)} Train Loss: {train_loss.item():.3f}')
+
+        if (i+1) % n_save == 0:
+            model_checkpoint = {'state_dict': model.state_dict()}
+            torch.save(model_checkpoint, f'{save_path}/model_{epoch}_{i+i}.pkl')
 
     model.eval()
     with torch.no_grad(), autocast(dtype=torch.bfloat16):
@@ -58,4 +62,4 @@ for epoch in range(n_epochs):
         print(f'Epoch: {epoch+1} Validation Loss: {validation_loss.item():.3f}')
 
     model_checkpoint = {'state_dict': model.state_dict()}
-    torch.save(model_checkpoint, f'{save_path}/model{epoch}.pkl')
+    torch.save(model_checkpoint, f'{save_path}/model_epoch{epoch}.pkl')

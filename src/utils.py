@@ -19,6 +19,7 @@ minibatch_size = 32
 n_minibatch = batch_size // minibatch_size
 n_epochs = 50
 n_print = 500
+n_save = 16384
 
 # Inference
 top_p_value = 0.95
@@ -26,7 +27,7 @@ topk_elements = 60
 temperature = 0.9
 
 # Config
-save_path = './checkpoints'
+save_path = '../checkpoints'
 
 # PyTorch device
 import torch
