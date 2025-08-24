@@ -18,7 +18,7 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.set_float32_matmul_precision('high')
 
 optimiser = bnb.optim.Adam8bit(model.parameters(), lr=learn_rate, betas=(0.9, 0.97), eps=1e-8, weight_decay=0.05)
-step_size = int(len(train_loader) * 0.75)
+step_size = int((len(train_loader)/5.7) * 0.75) # Accounting for larger dataset
 scheduler = optim.lr_scheduler.StepLR(optimiser, step_size=step_size, gamma=0.80)
 loss_function = nn.CrossEntropyLoss()
 
@@ -45,7 +45,7 @@ for epoch in range(n_epochs):
 
         if (i+1) % n_save == 0:
             model_checkpoint = {'state_dict': model.state_dict()}
-            torch.save(model_checkpoint, f'{save_path}/model_{epoch}_{i+i}.pkl')
+            torch.save(model_checkpoint, f'{save_path}/model_{epoch}_{i+1}.pkl')
 
     model.eval()
     with torch.no_grad(), autocast(dtype=torch.bfloat16):
